@@ -106,7 +106,6 @@ class PersistenceServiceTest extends TestCase
     }
 
     /**
-     * @group failing
      * @test
      */
     public function it_can_persist_a_cloned_model_with_a_has_many_relation_and_structure_the_cloned_relations_as_a_collection()
@@ -350,5 +349,58 @@ class PersistenceServiceTest extends TestCase
             Arr::except($original->fresh()->getAttributes(), ['id', 'created_at', 'updated_at']),
             Arr::except($clone->fresh()->getAttributes(), ['id', 'created_at', 'updated_at'])
         );
+    }
+
+    /** @test
+    * @group include-exclude
+    * Tests the api edit form
+    */
+    public function it_can_persist_only_explicitly_requested_relationships()
+    {
+        $person = factory(Person::class)->create();
+
+        $person->socialSecurityNumber()->save(factory(SocialSecurityNumber::class)->make());
+
+        factory(BankAccount::class, 2)->make()->each(function ($account) use ($person) {
+            $person->bankAccounts()->save($account);
+        });
+
+        $original = Person::with(['socialSecurityNumber', 'bankAccounts'])->first();
+
+        $cloneService = new CloneService();
+        $clone = ($cloneService)->clone($original);
+        $clone = (new PersistenceService)->only(['bankAccounts'])->persist($clone);
+
+        $this->assertCount(2, Person::all());
+        $this->assertCount(1, SocialSecurityNumber::all());
+        $this->assertCount(4, BankAccount::all());
+
+        $this->assertNull($clone->fresh()->load('socialSecurityNumber')->socialSecurityNumber);
+    }
+
+    /** @test
+    * @group include-exclude
+    */
+    public function it_can_persist_all_except_explicitly_excluded_relationships()
+    {
+        $person = factory(Person::class)->create();
+
+        $person->socialSecurityNumber()->save(factory(SocialSecurityNumber::class)->make());
+
+        factory(BankAccount::class, 2)->make()->each(function ($account) use ($person) {
+            $person->bankAccounts()->save($account);
+        });
+
+        $original = Person::with(['socialSecurityNumber', 'bankAccounts'])->first();
+
+        $cloneService = new CloneService();
+        $clone = ($cloneService)->clone($original);
+        $clone = (new PersistenceService)->except(['bankAccounts'])->persist($clone);
+
+        $this->assertCount(2, Person::all());
+        $this->assertCount(2, SocialSecurityNumber::all());
+        $this->assertCount(2, BankAccount::all());
+
+        $this->assertCount(0, $clone->fresh()->load('bankAccounts')->bankAccounts);
     }
 }
