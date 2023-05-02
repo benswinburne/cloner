@@ -3,6 +3,8 @@
 namespace Anfischer\Cloner;
 
 use Anfischer\Cloner\Exceptions\NoCompatiblePersistenceStrategyFound;
+use Anfischer\Cloner\Enums\MissingStrategies;
+use Anfischer\Cloner\Strategies\PersistNullStrategy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Collection;
@@ -109,7 +111,13 @@ class PersistenceService implements PersistenceServiceInterface
         $config = config('cloner.persistence_strategies');
 
         return collect($config)->get($relationType, function () use ($relationType) {
-            throw NoCompatiblePersistenceStrategyFound::forType($relationType);
+            $behaviour = config('cloner.missing_stragegies_should');
+
+            return match($behaviour) {
+                MissingStrategies::SKIP_SILENTLY => PersistNullStrategy::class,
+                MissingStrategies::SHOULD_THROW =>
+                    fn () => throw NoCompatiblePersistenceStrategyFound::forType($relationType),
+            };
         });
     }
 }

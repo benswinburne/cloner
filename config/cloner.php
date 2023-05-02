@@ -1,6 +1,20 @@
 <?php
 
+use Anfischer\Cloner\Enums\MissingStrategies;
+
 return [
+    /*
+    |--------------------------------------------------------------------------
+    | Missing Persistence Strategy Behaviour
+    |--------------------------------------------------------------------------
+    |
+    | When a persistance strategy is missing, the default behaviour of the
+    | cloner is to throw an exception which allows a transaction to roll
+    | back and cancel any perstance. This behaviour may be changed
+    |
+    */
+    'missing_stragegies_should' => MissingStrategies::SHOULD_THROW,
+
     /*
     |--------------------------------------------------------------------------
     | Persistence Strategies

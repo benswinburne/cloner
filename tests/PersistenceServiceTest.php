@@ -11,6 +11,7 @@ use Anfischer\Cloner\Stubs\CustomPerson;
 use Anfischer\Cloner\Stubs\SocialSecurityNumber;
 use Anfischer\Cloner\Stubs\VerificationRule;
 use Anfischer\Cloner\Stubs\WorkAddress;
+use Anfischer\Cloner\Enums\MissingStrategies;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -402,5 +403,26 @@ class PersistenceServiceTest extends TestCase
         $this->assertCount(2, BankAccount::all());
 
         $this->assertCount(0, $clone->fresh()->load('bankAccounts')->bankAccounts);
+    }
+
+    /** @test
+    * @group config
+    */
+    public function it_can_skip_unknown_relation_types_when_configured_to_do_so()
+    {
+        $person = factory(CustomPerson::class)->create();
+
+        $person->socialSecurityNumber()->save(factory(SocialSecurityNumber::class)->make());
+
+        config(['cloner.missing_stragegies_should' => MissingStrategies::SKIP_SILENTLY]);
+
+        $original = CustomPerson::with('socialSecurityNumber')->first();
+        $clone = (new CloneService)->clone($original);
+        $clone = (new PersistenceService)->persist($clone);
+
+        $this->assertCount(2, Person::all());
+        $this->assertCount(1, SocialSecurityNumber::all());
+
+        $this->assertNull($clone->fresh()->load('socialSecurityNumber')->socialSecurityNumber);
     }
 }
