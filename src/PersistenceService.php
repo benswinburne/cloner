@@ -115,8 +115,9 @@ class PersistenceService implements PersistenceServiceInterface
 
             return match($behaviour) {
                 MissingStrategies::SKIP_SILENTLY => PersistNullStrategy::class,
-                MissingStrategies::SHOULD_THROW =>
-                    fn () => throw NoCompatiblePersistenceStrategyFound::forType($relationType),
+                MissingStrategies::SHOULD_THROW => call_user_func(
+                    fn () => throw NoCompatiblePersistenceStrategyFound::forType($relationType)
+                ),
             };
         });
     }
