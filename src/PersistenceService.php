@@ -77,17 +77,19 @@ class PersistenceService implements PersistenceServiceInterface
                 return ! is_a($relationModel, Pivot::class);
             })
             ->filter(function ($relationModel, $relationName) {
-                return collect($this->only)->when(
-                    !empty($this->only),
-                    fn ($only) => $only->contains($relationName),
-                    fn () => true
-                );
+                return collect($this->only)
+                    ->when(!empty($this->only), function ($only) use ($relationName) {
+                        return $only->contains($relationName);
+                    }, function () {
+                        return true;
+                    });
             })->reject(function ($relationModel, $relationName) {
-                return collect($this->except)->when(
-                    !empty($this->except),
-                    fn ($except) => $except->contains($relationName),
-                    fn () => false
-                );
+                return collect($this->except)
+                    ->when(!empty($this->except), function ($only) use ($relationName) {
+                        return $only->contains($relationName);
+                    }, function () {
+                        return false;
+                    });
             })->each(function ($relationModel, $relationName) use ($model) {
                 $className = get_class((new ReflectionObject($model))->newInstance()->{$relationName}());
                 $strategy = $this->getPersistenceStrategy($className);
