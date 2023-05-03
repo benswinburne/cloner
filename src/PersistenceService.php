@@ -77,19 +77,17 @@ class PersistenceService implements PersistenceServiceInterface
                 return ! is_a($relationModel, Pivot::class);
             })
             ->filter(function ($relationModel, $relationName) {
-                return collect($this->only)
-                    ->when(!empty($this->only), function ($only) use ($relationName) {
-                        return $only->contains($relationName);
-                    }, function () {
-                        return true;
-                    });
+                return collect($this->only)->when(
+                    !empty($this->only),
+                    fn ($only) => $only->contains($relationName),
+                    fn () => true
+                );
             })->reject(function ($relationModel, $relationName) {
-                return collect($this->except)
-                    ->when(!empty($this->except), function ($only) use ($relationName) {
-                        return $only->contains($relationName);
-                    }, function () {
-                        return false;
-                    });
+                return collect($this->except)->when(
+                    !empty($this->except),
+                    fn ($except) => $except->contains($relationName),
+                    fn () => false
+                );
             })->each(function ($relationModel, $relationName) use ($model) {
                 $className = get_class((new ReflectionObject($model))->newInstance()->{$relationName}());
                 $strategy = $this->getPersistenceStrategy($className);
@@ -115,12 +113,11 @@ class PersistenceService implements PersistenceServiceInterface
         return collect($config)->get($relationType, function () use ($relationType) {
             $behaviour = config('cloner.missing_stragegies_should');
 
-            switch($behaviour) {
-                case MissingStrategies::SKIP_SILENTLY:
-                    return PersistNullStrategy::class;
-                case MissingStrategies::SHOULD_THROW:
-                default:
-                    throw NoCompatiblePersistenceStrategyFound::forType($relationType);
+            return match ($behaviour) {
+                MissingStrategies::SKIP_SILENTLY => PersistNullStrategy::class,
+                MissingStrategies::SHOULD_THROW => call_user_func(
+                    fn () => throw NoCompatiblePersistenceStrategyFound::forType($relationType)
+                ),
             };
         });
     }
