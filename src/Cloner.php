@@ -4,9 +4,12 @@ namespace Anfischer\Cloner;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Traits\ForwardsCalls;
 
 class Cloner
 {
+    use ForwardsCalls;
+
     private $cloneService;
     private $persistenceService;
 
@@ -61,5 +64,17 @@ class Cloner
     public function getKeyMap(): Collection
     {
         return $this->cloneService->getKeyMap();
+    }
+
+    /**
+     * Handle dynamic method calls into the peristence service
+     *
+     * @param  string  $method
+     * @param  array  $parameters
+     * @return mixed
+     */
+    public function __call($method, $parameters)
+    {
+        return $this->forwardCallTo($this->persistenceService, $method, $parameters);
     }
 }
