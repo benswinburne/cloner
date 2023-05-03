@@ -354,7 +354,6 @@ class PersistenceServiceTest extends TestCase
 
     /** @test
     * @group include-exclude
-    * Tests the api edit form
     */
     public function it_can_persist_only_explicitly_requested_relationships()
     {
