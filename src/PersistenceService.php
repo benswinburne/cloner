@@ -115,11 +115,12 @@ class PersistenceService implements PersistenceServiceInterface
         return collect($config)->get($relationType, function () use ($relationType) {
             $behaviour = config('cloner.missing_stragegies_should');
 
-            return match ($behaviour) {
-                MissingStrategies::SKIP_SILENTLY => PersistNullStrategy::class,
-                MissingStrategies::SHOULD_THROW => call_user_func(
-                    fn () => throw NoCompatiblePersistenceStrategyFound::forType($relationType)
-                ),
+            switch($behaviour) {
+                case MissingStrategies::SKIP_SILENTLY:
+                    return PersistNullStrategy::class;
+                case MissingStrategies::SHOULD_THROW:
+                default:
+                    throw NoCompatiblePersistenceStrategyFound::forType($relationType);
             };
         });
     }
