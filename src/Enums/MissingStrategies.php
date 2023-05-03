@@ -2,8 +2,8 @@
 
 namespace Anfischer\Cloner\Enums;
 
-enum MissingStrategies {
+enum MissingStrategies
+{
     case SHOULD_THROW;
     case SKIP_SILENTLY;
 }
-
