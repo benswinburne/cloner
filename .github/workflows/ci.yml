@@ -30,11 +30,11 @@ jobs:
           - {php: '8.2', illuminate: '^8'}
           - {php: '8.2', illuminate: '^9'}
           - {php: '8.2', illuminate: '^10'}
-          - {php: '8.2', illuminate: '^11'}
+          - {php: '8.2', illuminate: '^11', phpunit: 'phpunit10.xml'}
 
           - {php: '8.3', illuminate: '^9'}
           - {php: '8.3', illuminate: '^10'}
-          - {php: '8.3', illuminate: '^11'}
+          - {php: '8.3', illuminate: '^11', phpunit: 'phpunit10.xml'}
 
     steps:
       - name: Checkout
@@ -72,7 +72,9 @@ jobs:
 
       - name: Execute tests
         run: |
-          vendor/bin/phpunit --coverage-text --coverage-clover=coverage.clover
+          vendor/bin/phpunit \
+            --configuration ${{ matrix.pairs.phpunit || 'phpunit.xml' }}
+            --coverage-text --coverage-clover=coverage.clover
 
       - name: Archive code coverage results
         uses: actions/upload-artifact@v3
