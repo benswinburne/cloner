@@ -73,7 +73,7 @@ jobs:
       - name: Execute tests
         run: |
           vendor/bin/phpunit \
-            --configuration ${{ matrix.pairs.phpunit || 'phpunit.xml' }}
+            --configuration ${{ matrix.pairs.phpunit || 'phpunit.xml' }} \
             --coverage-text --coverage-clover=coverage.clover
 
       - name: Archive code coverage results
